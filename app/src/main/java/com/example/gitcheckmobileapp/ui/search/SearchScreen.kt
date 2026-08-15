@@ -3,8 +3,10 @@ package com.example.gitcheckmobileapp.ui.search
 import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,59 +23,49 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.gitcheckmobileapp.data.model.User
 import com.example.gitcheckmobileapp.ui.core.TopBar
 import com.example.gitcheckmobileapp.ui.theme.DefaultButtons
 import com.example.gitcheckmobileapp.ui.theme.TextColorBlack
 import com.example.gitcheckmobileapp.ui.theme.TextColorLightGrey
-
-data class AllRepos(val id: Int, val name: String, val desc: String, val readme: String)
-val repos = listOf(
-    AllRepos(12, "IOS labs", "Лабы в рамках курса ios-разработки", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(13, "Android labs", "Лабы в рамках курса android-разработки", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(14, "Assembler labs", "Лабы в рамках курса самоубийства", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(15, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(16, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(17, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(18, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(19, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(20, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(21, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(22, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(23, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(24, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-    AllRepos(25, "C++ labs", "Лабы в рамках курса мазохизма", "readme info we wer wer werwer we dfwae wefaw efwaefawe fwf wdf "),
-)
+import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
-    onItemClick: (Long) -> Unit,
+    onItemClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val configuration = LocalWindowInfo.current.containerSize
     val screenWidth = configuration.width
     val screenHeight = configuration.height
-    var searchQuery by remember { mutableStateOf("") }
-    var searchState by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        topBar = { TopBar("UserSearch", onBackClick) }
+        topBar = { TopBar("UserSearch", onBackClick) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         TextField(
             modifier = Modifier
@@ -88,12 +80,12 @@ fun SearchScreen(
                     elevation = 3.dp,
                     shape = RoundedCornerShape(15.dp)
                 )
-                .onFocusChanged{focusState ->
-                    if (focusState.isFocused) searchState = true
-                    else searchState = false
+                .onFocusChanged { focusState ->
+                    if (focusState.isFocused) viewModel.changeSearchState(true)
+                    else viewModel.changeSearchState(false)
                 },
-            value = searchQuery,
-            onValueChange = {searchQuery = it},
+            value = uiState.searchQuery,
+            onValueChange = {viewModel.changeSearchQuery(it)},
             textStyle = TextStyle(fontSize = 20.sp),
             placeholder = { Text(text = "Enter username", fontSize = 20.sp) },
             colors = OutlinedTextFieldDefaults.colors(
@@ -105,9 +97,21 @@ fun SearchScreen(
                 errorBorderColor = Color.Transparent,
             ),
             shape = RoundedCornerShape(15.dp),
+            singleLine = true,
         )
 
-        if (searchState) {
+        LaunchedEffect(uiState.errorMessage) {
+            uiState.errorMessage?.let {
+                snackbarHostState.showSnackbar(
+                    uiState.errorMessage ?: "",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short
+                )
+            }
+            viewModel.closeErrorMessage()
+        }
+
+        if ((uiState.usersList.isNotEmpty()) && (!uiState.isLoading)){
             ElevatedCard(
                 shape = RoundedCornerShape(15.dp),
                 elevation = CardDefaults.cardElevation(
@@ -126,34 +130,48 @@ fun SearchScreen(
                 ),
             ) {
                 LazyColumn( ) {
-                    items(repos) { currentRepo ->
-                        RepoRow(currentRepo, repos.last().id != currentRepo.id, onItemClick)
+                    items(uiState.usersList) { currentRepo ->
+                        RepoRow(currentRepo, uiState.usersList.last().id != currentRepo.id, onItemClick)
                     }
                 }
             }
         }
-        else{
+        else if ((uiState.usersList.isEmpty()) && (!uiState.isLoading)) {
             Icon(
                 imageVector = Icons.Outlined.Search,
                 contentDescription = "View the repository",
                 modifier = Modifier
                     .fillMaxHeight()
-                    .size((screenWidth*0.45).dp)
-                    .padding(0.dp, (screenHeight*0.05).dp, 0.dp, 0.dp),
+                    .size((screenWidth * 0.45).dp)
+                    .padding(0.dp, (screenHeight * 0.05).dp, 0.dp, 0.dp),
                 tint = MaterialTheme.colorScheme.TextColorLightGrey
             )
+        } else if (uiState.isLoading) {
+            Box (
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center).size((screenWidth / 6).dp),
+                    color = MaterialTheme.colorScheme.TopBarBackgroundColor,
+                    trackColor = MaterialTheme.colorScheme.TextColorLightGrey,
+                    strokeWidth = 12.dp
+                )
+            }
         }
     }
 }
 
 @Composable
-fun RepoRow(currentRepo: AllRepos, dividerFlag: Boolean, onItemClick: (Long) -> Unit){
+fun RepoRow(currentUser: User, dividerFlag: Boolean, onItemClick: (String) -> Unit){
     Row(
-        modifier = Modifier.clickable{ onItemClick(currentRepo.id.toLong()) }.fillMaxWidth().padding(16.dp),
+        modifier = Modifier
+            .clickable { onItemClick(currentUser.login) }
+            .fillMaxWidth()
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = currentRepo.name,
+            text = currentUser.login,
             color = MaterialTheme.colorScheme.TextColorBlack,
             fontSize = 20.sp
         )
@@ -170,7 +188,7 @@ fun RepoRow(currentRepo: AllRepos, dividerFlag: Boolean, onItemClick: (Long) -> 
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp, 0.dp, 16.dp ,0.dp),
+                .padding(16.dp, 0.dp, 16.dp, 0.dp),
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.TextColorLightGrey
         )

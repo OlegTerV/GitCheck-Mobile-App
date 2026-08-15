@@ -205,7 +205,7 @@ fun ModalCard(
                 color = MaterialTheme.colorScheme.TextColorLightGrey,
             )
             Text(
-                text = "длинный важный долгий текст о чем-то без знаков препиания и с грам важный долгий текст о чем-то без знаков препиания и с грамтаичексими ошибками ужас ужас ужас. читать тошно. хочу на работу в спецвуз",
+                text = "Something text",
                 color = MaterialTheme.colorScheme.TextColorBlack,
                 textAlign = TextAlign.Center,
                 fontSize = 20.sp,

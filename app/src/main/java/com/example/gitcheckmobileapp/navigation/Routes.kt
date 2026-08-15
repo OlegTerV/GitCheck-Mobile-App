@@ -12,4 +12,4 @@ data class RepoInfoScreen (val repoId: Long)
 object SearchScreen
 
 @Serializable
-data class UserRepositoriesScreen (val userId: Long)
+data class UserRepositoriesScreen (val userNickname: String)

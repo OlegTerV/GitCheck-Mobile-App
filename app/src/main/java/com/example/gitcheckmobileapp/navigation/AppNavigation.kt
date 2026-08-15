@@ -58,8 +58,8 @@ fun NavGraphBuilder.searchGraph(navController: NavController) {
         val viewModel: SearchViewModel = hiltViewModel()
         SearchScreen(
             viewModel = viewModel,
-            onItemClick = { userId ->
-                navController.navigate(UserRepositoriesScreen(userId)) },
+            onItemClick = { userNickname ->
+                navController.navigate(UserRepositoriesScreen(userNickname)) },
             onBackClick = { navController.popBackStack() }
         )
     }
