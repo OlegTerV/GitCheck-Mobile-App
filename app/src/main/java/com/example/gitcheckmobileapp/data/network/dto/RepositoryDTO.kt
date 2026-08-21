@@ -1,6 +1,7 @@
 package com.example.gitcheckmobileapp.data.network.dto
 
 import com.example.gitcheckmobileapp.data.model.Repository
+import com.example.gitcheckmobileapp.data.model.User
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,7 +10,7 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonIgnoreUnknownKeys
-data class AllUserRepositoriesDTO(
+data class RepositoryDTO(
     @SerialName("id")
     val id: Long,
     @SerialName("name")
@@ -26,10 +27,11 @@ data class AllUserRepositoriesDTO(
     val forksCount: Int
 )
 
-fun AllUserRepositoriesDTO.toRepository(): Repository {
+fun RepositoryDTO.toRepository(): Repository {
     return Repository(
         id = this.id,
         name = this.name,
+        owner = User(this.owner.id, this.owner.login),
         description = this.description ?: "",
         starsCount = this.starsCount,
         watchersCount = this.watchersCount,

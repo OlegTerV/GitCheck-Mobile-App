@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -103,12 +104,12 @@ fun SearchScreen(
         LaunchedEffect(uiState.errorMessage) {
             uiState.errorMessage?.let {
                 snackbarHostState.showSnackbar(
-                    uiState.errorMessage ?: "",
+                    uiState.errorMessage ?: "Something error",
                     withDismissAction = true,
                     duration = SnackbarDuration.Short
                 )
+                viewModel.closeErrorMessage()
             }
-            viewModel.closeErrorMessage()
         }
 
         if ((uiState.usersList.isNotEmpty()) && (!uiState.isLoading)){
@@ -146,7 +147,8 @@ fun SearchScreen(
                     .padding(0.dp, (screenHeight * 0.05).dp, 0.dp, 0.dp),
                 tint = MaterialTheme.colorScheme.TextColorLightGrey
             )
-        } else if (uiState.isLoading) {
+        }
+        else if (uiState.isLoading) {
             Box (
                 modifier = Modifier.fillMaxSize()
             ) {

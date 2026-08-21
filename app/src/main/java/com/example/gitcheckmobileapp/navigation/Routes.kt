@@ -6,10 +6,16 @@ import kotlinx.serialization.Serializable
 object HomeScreen
 
 @Serializable
-data class RepoInfoScreen (val repoId: Long)
+data class RepoInfoScreen (val repoData: String)
 
 @Serializable
 object SearchScreen
 
 @Serializable
 data class UserRepositoriesScreen (val userNickname: String)
+
+@Serializable
+data class CommitsScreen (val repoData: String)
+
+@Serializable
+data class PullRequestsScreen (val repoData: String)

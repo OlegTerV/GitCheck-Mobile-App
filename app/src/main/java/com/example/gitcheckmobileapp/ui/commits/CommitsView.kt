@@ -1,29 +1,21 @@
-package com.example.gitcheckmobileapp.ui.userRepos
+package com.example.gitcheckmobileapp.ui.commits
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.CallSplit
-import androidx.compose.material.icons.outlined.RemoveRedEye
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -31,50 +23,54 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.gitcheckmobileapp.data.model.Repository
+import com.example.gitcheckmobileapp.data.model.AuthorOrCommitter
+import com.example.gitcheckmobileapp.data.model.OneCommit
+import com.example.gitcheckmobileapp.data.network.dto.AuthorOrCommitterDTO
+import com.example.gitcheckmobileapp.ui.core.TitleAndTextRow
 import com.example.gitcheckmobileapp.ui.core.TopBar
 import com.example.gitcheckmobileapp.ui.theme.DefaultButtons
-import com.example.gitcheckmobileapp.ui.theme.MainColor
 import com.example.gitcheckmobileapp.ui.theme.TextColorBlack
 import com.example.gitcheckmobileapp.ui.theme.TextColorLightGrey
 import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
-import kotlinx.serialization.json.Json
-import java.nio.file.WatchEvent
 
 @Composable
-fun UserRepositoriesScreen(
-    viewModel: UserRepositoriesViewModel,
-    onItemClick: (String) -> Unit,
-    onBackClick: () -> Unit
-){
+fun CommitsView(
+    viewModel: CommitsViewModel,
+    onBackItem: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val configuration = LocalWindowInfo.current.containerSize
-    val screenWidth = configuration.width
-    val screenHeight = configuration.height
-    val snackbarHostState = remember{ SnackbarHostState() }
+    val width = configuration.width
+    val height = configuration.height
+    val snackbarHost = remember{ SnackbarHostState() }
 
     Scaffold(
-        topBar = { TopBar("${uiState.userNickname}'s repositories", onBackClick) },
-        snackbarHost = {SnackbarHost(hostState = snackbarHostState)}
+        topBar = {
+            TopBar(
+                title = uiState.repoName,
+                onBackClick = onBackItem,
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHost) }
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            Box (
+        if(uiState.isLoading){
+            Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center).size((screenWidth / 6).dp),
+                    modifier = Modifier.align(Alignment.Center).size((width / 6).dp),
                     color = MaterialTheme.colorScheme.TopBarBackgroundColor,
                     trackColor = MaterialTheme.colorScheme.TextColorLightGrey,
                     strokeWidth = 12.dp,
@@ -84,22 +80,22 @@ fun UserRepositoriesScreen(
         } else {
             LazyColumn(//TODO: заменить на адаптивную сетку (в контексте широких экранов/средних/ и т.д.)
                 contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding() + (screenHeight * 0.01).dp,
+                    top = innerPadding.calculateTopPadding() + (height * 0.01).dp,
                     bottom = innerPadding.calculateBottomPadding(),
-                    start = (screenWidth * 0.01).dp,
-                    end = (screenWidth * 0.01).dp
+                    start = (width * 0.01).dp,
+                    end = (width * 0.01).dp
                 ),
-                verticalArrangement = Arrangement.spacedBy((screenHeight * 0.007).dp)
+                verticalArrangement = Arrangement.spacedBy((height * 0.007).dp)
             ) {
-                items(uiState.repos) { currentRepo ->
-                    CardShortRepoInfo(currentRepo, screenHeight, screenWidth, onItemClick)
+                items(uiState.commits) { currentCommit ->
+                    CardCommit(currentCommit, height, width)
                 }
             }
         }
 
         LaunchedEffect(uiState.errorMessage) {
-            uiState.errorMessage?.let {
-                snackbarHostState.showSnackbar(
+            uiState.errorMessage?.let{
+                snackbarHost.showSnackbar(
                     message = uiState.errorMessage ?: "Something error",
                     withDismissAction = true,
                     duration = SnackbarDuration.Short
@@ -111,19 +107,16 @@ fun UserRepositoriesScreen(
 }
 
 @Composable
-fun CardShortRepoInfo(
-    currentRepo: Repository,
+fun CardCommit(
+    currentCommit: OneCommit,
     screenHeight: Int,
     screenWidth: Int,
-    onItemClick: (String) -> Unit
 ) {
     val dividerPaddings = screenWidth * 0.02
-    val cardContentPaddings =  screenWidth * 0.02
+    val cardContentPaddings = screenWidth * 0.02
     val titlePaddings = screenHeight * 0.005
-    val currentRepoStringJson = Json.encodeToString(currentRepo)
 
     ElevatedCard(
-        onClick = {onItemClick(currentRepoStringJson)},
         shape = RoundedCornerShape(15.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 3.dp
@@ -134,47 +127,66 @@ fun CardShortRepoInfo(
             containerColor = MaterialTheme.colorScheme.DefaultButtons
         ),
     ){
-        Text(
-            text = currentRepo.name,
-            color = MaterialTheme.colorScheme.TextColorBlack,
-            textAlign = TextAlign.Center,
-            fontSize = 24.sp,
-            modifier = Modifier.fillMaxWidth().padding(0.dp, titlePaddings.dp, 0.dp, titlePaddings.dp)
-        )
+        AuthorOrCommitter("Author", currentCommit.author, titlePaddings, dividerPaddings)
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dividerPaddings.dp, 0.dp, dividerPaddings.dp ,0.dp),
+                .padding(dividerPaddings.dp, 0.dp, dividerPaddings.dp, 0.dp),
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.TextColorLightGrey,
         )
-        Row (
+        AuthorOrCommitter("Committer", currentCommit.committer, titlePaddings, dividerPaddings)
+        HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dividerPaddings.dp, titlePaddings.dp, dividerPaddings.dp, titlePaddings.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CardWidget(Icons.Outlined.Star, "Number of stars", currentRepo.starsCount, screenHeight * 0.009)
-            Spacer(modifier = Modifier.width((screenWidth*0.01).dp))
-            CardWidget(Icons.Outlined.RemoveRedEye, "Number of subscribers", currentRepo.watchersCount, screenHeight * 0.009)
-            Spacer(modifier = Modifier.weight(1f))
-            CardWidget(Icons.AutoMirrored.Outlined.CallSplit, "Number of forks", currentRepo.forksCount, screenHeight * 0.009)
-        }
+                .padding(dividerPaddings.dp, 0.dp, dividerPaddings.dp, 0.dp),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.TextColorLightGrey,
+        )
+        Text(
+            text = "Message",
+            color = MaterialTheme.colorScheme.TextColorBlack,
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, titlePaddings.dp, 0.dp, titlePaddings.dp)
+        )
+        Text(
+            text = currentCommit.message,
+            color = MaterialTheme.colorScheme.TextColorBlack,
+            fontSize = 20.sp,
+            modifier = Modifier
+                .fillMaxWidth().padding(
+                    start = dividerPaddings.dp,
+                    end = dividerPaddings.dp,
+                    bottom = titlePaddings.dp
+                ),
+        )
     }
 }
 
 @Composable
-fun CardWidget(iconImage: ImageVector, desc: String, value: Int, valueSize: Double){
-    Icon(
-        imageVector = iconImage,
-        contentDescription = desc,
-        modifier = Modifier
-            .size(20.dp),
-        tint = Color.DarkGray
-    )
+fun AuthorOrCommitter(
+    title: String,
+    authorOrCommitter: AuthorOrCommitter,
+    titlePaddings: Double,
+    dividerPaddings: Double
+){
     Text(
-        text = value.toString(),
+        text = title,
+        color = MaterialTheme.colorScheme.TextColorBlack,
+        textAlign = TextAlign.Center,
         fontSize = 20.sp,
-        color = Color.DarkGray
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(0.dp, titlePaddings.dp, 0.dp, titlePaddings.dp)
     )
+
+    TitleAndTextRow("Name: ", authorOrCommitter.name, dividerPaddings, 0.0)
+    TitleAndTextRow("Email: ", authorOrCommitter.email , dividerPaddings, 0.0)
+    TitleAndTextRow("Date: ", authorOrCommitter.date, dividerPaddings, titlePaddings)
 }
+

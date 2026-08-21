@@ -5,18 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gitcheckmobileapp.data.model.Resource
 import com.example.gitcheckmobileapp.data.model.User
-import com.example.gitcheckmobileapp.data.network.dto.toUser
-import com.example.gitcheckmobileapp.data.repository.UserRepository
+import com.example.gitcheckmobileapp.data.repository.NetworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
@@ -34,7 +31,7 @@ data class SearchUiState(
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val networkRepository: NetworkRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(SearchUiState())
     private val _searchQuery = MutableStateFlow("")
@@ -56,7 +53,7 @@ class SearchViewModel @Inject constructor(
                     } }
                 .flatMapLatest { it ->
                     if (it.isNotBlank()) {
-                        flow{ emit(userRepository.searchUsers(it))}
+                        flow{ emit(networkRepository.searchUsers(it))}
                     } else {
                         flow{ emit(Resource.Success(emptyList()))}
                     }
@@ -66,7 +63,7 @@ class SearchViewModel @Inject constructor(
                         is Resource.Success -> {
                             _uiState.update { it ->
                                 it.copy(
-                                    usersList = apiResponse.apiData.map {it.toUser()},
+                                    usersList = apiResponse.apiData,
                                     errorMessage = null,
                                     isLoading = false
                                 )
@@ -102,6 +99,12 @@ class SearchViewModel @Inject constructor(
     fun closeErrorMessage(){
         _uiState.update { it ->
             it.copy(errorMessage = null)
+        }
+    }
+
+    fun sendErrorMessage(message: String){
+        _uiState.update { it ->
+            it.copy(errorMessage = message)
         }
     }
 }

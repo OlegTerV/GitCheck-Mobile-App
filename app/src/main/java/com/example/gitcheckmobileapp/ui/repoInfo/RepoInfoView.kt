@@ -1,6 +1,7 @@
 package com.example.gitcheckmobileapp.ui.repoInfo
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +48,7 @@ import com.example.gitcheckmobileapp.ui.theme.TextColorBlack
 import com.example.gitcheckmobileapp.ui.theme.TextColorLightGrey
 import com.example.gitcheckmobileapp.R
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.window.Dialog
 import com.example.gitcheckmobileapp.ui.theme.MainColor
 import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
@@ -53,6 +56,8 @@ import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
 @Composable
 fun RepoInfoScreen(
     viewModel: RepoInfoViewModel,
+    checkCommits: (String) -> Unit,
+    checkPullRequests: (String) -> Unit,
     onBackClick: () -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -63,53 +68,114 @@ fun RepoInfoScreen(
     val paddingValue = (screenHeight*0.01)
 
     Scaffold(
-        topBar = { TopBar("Repo Info", onBackClick) } //TODO заменить на название репозитория (в остальных топ барах тоже)
+        topBar = { TopBar(uiState.repoName, onBackClick) } //TODO заменить на название репозитория (в остальных топ барах тоже)
     ) { innerPadding ->
-        LazyVerticalGrid(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = 0.dp,
-                    start = (screenWidth * 0.01).dp,
-                    end = (screenWidth * 0.01).dp,
-                ),
-            columns = GridCells.Adaptive(minSize = minSizeCell.dp),
-            horizontalArrangement = Arrangement.spacedBy((screenWidth * 0.015).dp),
-            verticalArrangement = Arrangement.spacedBy((screenHeight * 0.007).dp)
-        ) {
-            item (span = {GridItemSpan(maxLineSpan)}) {
-                Spacer(modifier = Modifier.height((screenHeight * 0.003).dp))
+        if (uiState.isLoading) {
+            Box (
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size((screenWidth / 6).dp),
+                    color = MaterialTheme.colorScheme.TopBarBackgroundColor,
+                    trackColor = MaterialTheme.colorScheme.TextColorLightGrey,
+                    strokeWidth = 12.dp,
+                    strokeCap = StrokeCap.Round
+                )
             }
-            item {
-                ActionCard({ viewModel.changeStateAboutModal() }, "About", Icons.Outlined.Info, screenWidth, screenHeight)
+        } else {
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = 0.dp,
+                        start = (screenWidth * 0.01).dp,
+                        end = (screenWidth * 0.01).dp,
+                    ),
+                columns = GridCells.Adaptive(minSize = minSizeCell.dp),
+                horizontalArrangement = Arrangement.spacedBy((screenWidth * 0.015).dp),
+                verticalArrangement = Arrangement.spacedBy((screenHeight * 0.007).dp)
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(modifier = Modifier.height((screenHeight * 0.003).dp))
+                }
+                item {
+                    ActionCard(
+                        { viewModel.changeStateAboutModal() },
+                        "About",
+                        Icons.Outlined.Info,
+                        screenWidth,
+                        screenHeight
+                    )
+                }
+                item {
+                    ActionCard(
+                        { viewModel.changeStateReadmeModal() },
+                        "Readme",
+                        Icons.Outlined.Description,
+                        screenWidth,
+                        screenHeight
+                    )
+                }
+                item {
+                    ActionCard(
+                        { checkCommits(viewModel.getAllRepoData()) },
+                        "Commits",
+                        Icons.Outlined.Commit,
+                        screenWidth,
+                        screenHeight)
+                }
+                item {
+                    ActionCard(
+                        {checkPullRequests(viewModel.getAllRepoData())},
+                        "Pull requests",
+                        ImageVector.vectorResource(R.drawable.ic_rebase),
+                        screenWidth,
+                        screenHeight
+                    )
+                }
+                item {
+                    ActionCard(
+                        { viewModel.changeStarState() },
+                        uiState.starButtonText,
+                        ImageVector.vectorResource(uiState.starButtonIcon),
+                        screenWidth,
+                        screenHeight
+                    )
+                }
+                item {
+                    ActionCard(
+                        { viewModel.changeSubscribeState() },
+                        uiState.subscribeButtonText,
+                        uiState.subscribeButtonIcon,
+                        screenWidth,
+                        screenHeight
+                    )
+                }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(modifier = Modifier.height(innerPadding.calculateBottomPadding()))
+                }
             }
-            item {
-                ActionCard({ viewModel.changeStateReadmeModal() }, "Readme", Icons.Outlined.Description, screenWidth, screenHeight)
-            }
-            item {
-                ActionCard(null, "Commits", Icons.Outlined.Commit, screenWidth, screenHeight)
-            }
-            item {
-                ActionCard(null, "Pull requests", ImageVector.vectorResource(R.drawable.ic_rebase), screenWidth, screenHeight)
-            }
-            item {
-                ActionCard({ viewModel.changeStarState() }, uiState.starButtonText, ImageVector.vectorResource(uiState.starButtonIcon), screenWidth, screenHeight)
-            }
-            item {
-                ActionCard({ viewModel.changeSubscribeState() }, uiState.subscribeButtonText, uiState.subscribeButtonIcon, screenWidth, screenHeight)
-            }
-            item (span = {GridItemSpan(maxLineSpan)}) {
-                Spacer(modifier = Modifier.height(innerPadding.calculateBottomPadding()))
-            }
-        }
 
-        if (uiState.aboutRepoModal) {
-            ModalCard("About", "", screenWidth, screenHeight) { viewModel.changeStateAboutModal() }
-        }
+            if (uiState.aboutRepoModal) {
+                ModalCard(
+                    "About",
+                    uiState.about,
+                    screenWidth,
+                    screenHeight
+                ) { viewModel.changeStateAboutModal() }
+            }
 
-        if (uiState.readmeRepoModal) {
-            ModalCard("Readme", "", screenWidth, screenHeight) { viewModel.changeStateReadmeModal() }
+            if (uiState.readmeRepoModal) {
+                ModalCard(
+                    "Readme",
+                    uiState.readme,
+                    screenWidth,
+                    screenHeight
+                ) { viewModel.changeStateReadmeModal() }
+            }
         }
     }
 }
@@ -205,7 +271,7 @@ fun ModalCard(
                 color = MaterialTheme.colorScheme.TextColorLightGrey,
             )
             Text(
-                text = "Something text",
+                text = text,
                 color = MaterialTheme.colorScheme.TextColorBlack,
                 textAlign = TextAlign.Center,
                 fontSize = 20.sp,
@@ -222,7 +288,9 @@ fun ModalCard(
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 3.dp
                 ),
-                modifier = Modifier.padding(5.dp).align(Alignment.End)
+                modifier = Modifier
+                    .padding(5.dp)
+                    .align(Alignment.End)
             ) {
                 Text(
                     text = "Dismiss",

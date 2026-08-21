@@ -13,6 +13,8 @@ import java.net.URL
 @Singleton
 class ApiService @Inject constructor() {
 
+    private val baseUrl = "https://api.github.com/"
+
     private fun createConnection(url: String, method: String): HttpURLConnection {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.requestMethod = method
@@ -27,6 +29,25 @@ class ApiService @Inject constructor() {
         return connection.inputStream.bufferedReader().use {it.readText()}
     }
 
+    fun getDataFromService(endPoint: String): String{
+        val connection = createConnection("$baseUrl$endPoint", "GET")
+        return try {
+            val responseCode = connection.responseCode
+            if (responseCode in 200..299){
+                readResponseStream(connection)
+            } else if (responseCode in 400..499) {
+                throw HttpException(responseCode.toString(), " Client error.")
+            } else if (responseCode in 500..599) {
+                throw HttpException(responseCode.toString(), " Server error.")
+            } else throw HttpException(responseCode.toString(), "Something error")
+        } catch (e: IOException) {
+            throw HttpException("ERR_INTERNET_DISCONNECTED", "Something error")
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /*
     fun searchUser(nickName: String): String {
         val connection = createConnection("https://api.github.com/search/users?q=$nickName", "GET")
         return try {
@@ -62,6 +83,8 @@ class ApiService @Inject constructor() {
             connection.disconnect()
         }
     }
+
+     */
 }
 
 class HttpException(val code: String, message: String): Exception("$message. Code $code.")
