@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -55,7 +56,7 @@ import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
-    onItemClick: (String) -> Unit,
+    onItemClick: (Long, String) -> Unit,
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -125,7 +126,8 @@ fun SearchScreen(
                         innerPadding.calculateTopPadding() * 2 + (screenHeight * 0.003).dp,
                         (screenWidth * 0.01).dp,
                         innerPadding.calculateBottomPadding()
-                    ),
+                    )
+                    .imePadding(),
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.DefaultButtons
                 ),
@@ -164,10 +166,10 @@ fun SearchScreen(
 }
 
 @Composable
-fun RepoRow(currentUser: User, dividerFlag: Boolean, onItemClick: (String) -> Unit){
+fun RepoRow(currentUser: User, dividerFlag: Boolean, onItemClick: (Long, String) -> Unit){
     Row(
         modifier = Modifier
-            .clickable { onItemClick(currentUser.login) }
+            .clickable { onItemClick(currentUser.id, currentUser.login) }
             .fillMaxWidth()
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween

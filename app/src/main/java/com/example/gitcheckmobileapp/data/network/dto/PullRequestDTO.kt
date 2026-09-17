@@ -1,5 +1,7 @@
 package com.example.gitcheckmobileapp.data.network.dto
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.gitcheckmobileapp.data.model.PullRequest
 import com.example.gitcheckmobileapp.ui.utils.toReadbleDate
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -24,6 +26,7 @@ data class PullRequestDTO(
     val authorAssociation: String
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun PullRequestDTO.toPullRequest(): PullRequest {
     return PullRequest(
         title = this.title,

@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,19 +57,23 @@ import com.example.gitcheckmobileapp.ui.theme.TopBarBackgroundColor
 @Composable
 fun RepoInfoScreen(
     viewModel: RepoInfoViewModel,
-    checkCommits: (String) -> Unit,
-    checkPullRequests: (String) -> Unit,
+    checkCommits: (String, String, Long) -> Unit,
+    checkPullRequests: (String, String, Long) -> Unit,
     onBackClick: () -> Unit
 ){
+    LaunchedEffect(Unit) {
+        viewModel.loadData()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val configuration = LocalWindowInfo.current.containerSize
     val screenWidth = configuration.width
     val screenHeight = configuration.height
     val minSizeCell = screenWidth * 0.17
     val paddingValue = (screenHeight*0.01)
+    val repoData = viewModel.getAllRepoData()
 
     Scaffold(
-        topBar = { TopBar(uiState.repoName, onBackClick) } //TODO заменить на название репозитория (в остальных топ барах тоже)
+        topBar = { TopBar(uiState.repoName, onBackClick) }
     ) { innerPadding ->
         if (uiState.isLoading) {
             Box (
@@ -121,7 +126,7 @@ fun RepoInfoScreen(
                 }
                 item {
                     ActionCard(
-                        { checkCommits(viewModel.getAllRepoData()) },
+                        { checkCommits(repoData.first, repoData.second, repoData.third) },
                         "Commits",
                         Icons.Outlined.Commit,
                         screenWidth,
@@ -129,20 +134,20 @@ fun RepoInfoScreen(
                 }
                 item {
                     ActionCard(
-                        {checkPullRequests(viewModel.getAllRepoData())},
+                        {checkPullRequests(repoData.first, repoData.second, repoData.third)},
                         "Pull requests",
                         ImageVector.vectorResource(R.drawable.ic_rebase),
                         screenWidth,
                         screenHeight
                     )
                 }
-                item {
+          /*      item {
                     ActionCard(
                         { viewModel.changeStarState() },
                         uiState.starButtonText,
                         ImageVector.vectorResource(uiState.starButtonIcon),
                         screenWidth,
-                        screenHeight
+                        screenHeight,
                     )
                 }
                 item {
@@ -151,9 +156,9 @@ fun RepoInfoScreen(
                         uiState.subscribeButtonText,
                         uiState.subscribeButtonIcon,
                         screenWidth,
-                        screenHeight
+                        screenHeight,
                     )
-                }
+                }*/
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Spacer(modifier = Modifier.height(innerPadding.calculateBottomPadding()))
                 }
@@ -186,7 +191,8 @@ fun ActionCard(
     actionText: String,
     iconImage: ImageVector,
     screenWidth: Int,
-    screenHeight: Int
+    screenHeight: Int,
+    enabled: Boolean = true
 ){
     val iconSize = screenWidth*0.07
 
@@ -199,6 +205,7 @@ fun ActionCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.DefaultButtons
         ),
+        enabled = enabled
     ) {
         Column (
             horizontalAlignment = Alignment.CenterHorizontally,

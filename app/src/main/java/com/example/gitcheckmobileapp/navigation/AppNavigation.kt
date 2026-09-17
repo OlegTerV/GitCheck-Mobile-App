@@ -1,5 +1,7 @@
 package com.example.gitcheckmobileapp.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -7,7 +9,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.example.gitcheckmobileapp.ui.commits.CommitsView
 import com.example.gitcheckmobileapp.ui.commits.CommitsViewModel
 import com.example.gitcheckmobileapp.ui.home.HomeScreen
@@ -20,8 +21,8 @@ import com.example.gitcheckmobileapp.ui.search.SearchScreen
 import com.example.gitcheckmobileapp.ui.search.SearchViewModel
 import com.example.gitcheckmobileapp.ui.userRepos.UserRepositoriesViewModel
 import com.example.gitcheckmobileapp.ui.userRepos.UserRepositoriesScreen
-import com.google.android.gms.common.zzq
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(){
     val navController = rememberNavController()
@@ -54,11 +55,11 @@ fun NavGraphBuilder.repoInfoGraph(navController: NavController) {
         val viewModel: RepoInfoViewModel = hiltViewModel()
         RepoInfoScreen(
             viewModel = viewModel,
-            checkCommits = {repoData ->
-                navController.navigate(CommitsScreen(repoData))
+            checkCommits = {ownerName, repoName, repoId ->
+                navController.navigate(CommitsScreen(ownerName, repoName, repoId))
             },
-            checkPullRequests = {repoData ->
-                navController.navigate(PullRequestsScreen(repoData))
+            checkPullRequests = {ownerName, repoName, repoId ->
+                navController.navigate(PullRequestsScreen(ownerName, repoName, repoId))
             },
             onBackClick = {navController.popBackStack()}
         )
@@ -70,8 +71,8 @@ fun NavGraphBuilder.searchGraph(navController: NavController) {
         val viewModel: SearchViewModel = hiltViewModel()
         SearchScreen(
             viewModel = viewModel,
-            onItemClick = { userNickname ->
-                navController.navigate(UserRepositoriesScreen(userNickname)) },
+            onItemClick = { userId, userName ->
+                navController.navigate(UserRepositoriesScreen(userId, userName)) },
             onBackClick = { navController.popBackStack() }
         )
     }
@@ -82,8 +83,12 @@ fun NavGraphBuilder.userRepositoriesGraph(navController: NavController) {
         val viewModel: UserRepositoriesViewModel = hiltViewModel()
         UserRepositoriesScreen(
             viewModel = viewModel,
-            onItemClick = { repoData ->
-                navController.navigate(RepoInfoScreen(repoData)) },
+            onItemClick = { ownerName, repoName, repoId, repoAbout ->
+                navController.navigate(RepoInfoScreen(
+                    ownerName = ownerName,
+                    repoName = repoName,
+                    repoId = repoId,
+                    repoAbout = repoAbout)) },
             onBackClick = { navController.popBackStack() }
         )
     }
@@ -99,6 +104,7 @@ fun NavGraphBuilder.commitsGraph(navController: NavController){
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.pullRequestsGraph(navController: NavController){
     composable<PullRequestsScreen> {
         val viewModel: PullRequestViewModel = hiltViewModel()
