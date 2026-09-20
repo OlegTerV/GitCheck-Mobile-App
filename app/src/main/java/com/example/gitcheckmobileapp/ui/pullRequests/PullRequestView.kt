@@ -1,5 +1,7 @@
 package com.example.gitcheckmobileapp.ui.pullRequests
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,11 +45,15 @@ import com.example.gitcheckmobileapp.ui.theme.DefaultButtons
 import com.example.gitcheckmobileapp.ui.theme.TextColorBlack
 import java.nio.file.WatchEvent
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PullRequestView(
     viewModel: PullRequestViewModel,
     onBackItem: () -> Unit
 ){
+    LaunchedEffect(Unit){
+        viewModel.loadData()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val configuration = LocalWindowInfo.current.containerSize

@@ -56,9 +56,12 @@ import java.nio.file.WatchEvent
 @Composable
 fun UserRepositoriesScreen(
     viewModel: UserRepositoriesViewModel,
-    onItemClick: (String) -> Unit,
+    onItemClick: (String, String, Long, String) -> Unit,
     onBackClick: () -> Unit
 ){
+    LaunchedEffect(Unit) {
+        viewModel.loadData()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val configuration = LocalWindowInfo.current.containerSize
     val screenWidth = configuration.width
@@ -115,7 +118,7 @@ fun CardShortRepoInfo(
     currentRepo: Repository,
     screenHeight: Int,
     screenWidth: Int,
-    onItemClick: (String) -> Unit
+    onItemClick: (String, String, Long, String) -> Unit
 ) {
     val dividerPaddings = screenWidth * 0.02
     val cardContentPaddings =  screenWidth * 0.02
@@ -123,7 +126,7 @@ fun CardShortRepoInfo(
     val currentRepoStringJson = Json.encodeToString(currentRepo)
 
     ElevatedCard(
-        onClick = {onItemClick(currentRepoStringJson)},
+        onClick = {onItemClick(currentRepo.owner.login, currentRepo.name, currentRepo.id, currentRepo.description)},
         shape = RoundedCornerShape(15.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 3.dp

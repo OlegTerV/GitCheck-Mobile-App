@@ -69,7 +69,8 @@ fun HomeScreen(
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 3.dp
                 ),
-                modifier = Modifier.width((screenWidth * 0.25).dp)
+                modifier = Modifier.width((screenWidth * 0.25).dp),
+                enabled = false
             ) {
                 Text(
                     text = "Sign In",

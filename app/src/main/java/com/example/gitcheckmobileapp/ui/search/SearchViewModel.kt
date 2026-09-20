@@ -31,7 +31,7 @@ data class SearchUiState(
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository
+    private val networkRepository: NetworkRepository,
 ): ViewModel() {
     private val _uiState = MutableStateFlow(SearchUiState())
     private val _searchQuery = MutableStateFlow("")
@@ -53,7 +53,7 @@ class SearchViewModel @Inject constructor(
                     } }
                 .flatMapLatest { it ->
                     if (it.isNotBlank()) {
-                        flow{ emit(networkRepository.searchUsers(it))}
+                        flow{ emit(networkRepository.searchUsersWithDB(it))}
                     } else {
                         flow{ emit(Resource.Success(emptyList()))}
                     }
@@ -63,7 +63,7 @@ class SearchViewModel @Inject constructor(
                         is Resource.Success -> {
                             _uiState.update { it ->
                                 it.copy(
-                                    usersList = apiResponse.apiData,
+                                    usersList = apiResponse.data,
                                     errorMessage = null,
                                     isLoading = false
                                 )

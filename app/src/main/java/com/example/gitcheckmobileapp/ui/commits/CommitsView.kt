@@ -49,6 +49,9 @@ fun CommitsView(
     viewModel: CommitsViewModel,
     onBackItem: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loadData()
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val configuration = LocalWindowInfo.current.containerSize
@@ -127,7 +130,7 @@ fun CardCommit(
             containerColor = MaterialTheme.colorScheme.DefaultButtons
         ),
     ){
-        AuthorOrCommitter("Author", currentCommit.author, titlePaddings, dividerPaddings)
+        AuthorOrCommitterView("Author", currentCommit.author, titlePaddings, dividerPaddings)
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
@@ -135,7 +138,7 @@ fun CardCommit(
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.TextColorLightGrey,
         )
-        AuthorOrCommitter("Committer", currentCommit.committer, titlePaddings, dividerPaddings)
+        AuthorOrCommitterView("Committer", currentCommit.committer, titlePaddings, dividerPaddings)
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,7 +171,7 @@ fun CardCommit(
 }
 
 @Composable
-fun AuthorOrCommitter(
+fun AuthorOrCommitterView(
     title: String,
     authorOrCommitter: AuthorOrCommitter,
     titlePaddings: Double,
